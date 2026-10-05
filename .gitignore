@@ -1,0 +1,101 @@
+# .gitignore: archivos que git no versiona en este repositorio.
+#
+# Cubre los sistemas operativos, lenguajes y editores más comunes: las
+# reglas de una herramienta que no usan no molestan. Al final hay una
+# sección para las reglas propias del grupo.
+#
+# Este archivo vale para todo el repositorio porque está en la raíz.
+# Agregar aquí un archivo que ya está versionado no basta; hay que
+# retirarlo del index, sin borrarlo del disco:
+#   git rm --cached <archivo>
+#
+# Para versionar igual un archivo ignorado, se antepone "!":
+#   !data/ejemplo.csv
+
+# --- Sistemas operativos ----------------------------------------------
+# macOS
+.DS_Store
+._*
+# Windows
+Thumbs.db
+desktop.ini
+# Linux
+.directory
+.Trash-*
+
+# --- Python -----------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+# entornos virtuales (venv, virtualenv, uv, poetry, conda)
+.venv/
+venv/
+env/
+.conda/
+
+# --- Jupyter ----------------------------------------------------------
+.ipynb_checkpoints/
+
+# --- R y RStudio ------------------------------------------------------
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+
+# --- Quarto -----------------------------------------------------------
+.quarto/
+
+# --- LaTeX (archivos auxiliares de compilación) -----------------------
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+
+# --- Editores e IDE ---------------------------------------------------
+# VS Code
+.vscode/
+# JetBrains: PyCharm, DataSpell, IntelliJ
+.idea/
+# Spyder
+.spyproject/
+# Sublime Text
+*.sublime-workspace
+# Vim y Emacs
+*.swp
+*.swo
+*~
+\#*\#
+.#*
+
+# --- Office y LibreOffice ---------------------------------------------
+# archivos de bloqueo mientras el documento está abierto
+~$*
+.~lock.*#
+
+# --- Secretos ---------------------------------------------------------
+# claves de API, contraseñas: una vez en un commit, quedan en la historia
+.env
+.env.*
+!.env.example
+
+# --- Reglas propias del grupo -----------------------------------------
+# Por ejemplo, datos que se regeneran con el código o archivos pesados
+# (GitHub rechaza los archivos de más de 100 MB):
+# data/procesados/
+# *.pkl
+# Datos extraídos y base generada: se reconstruyen con
+#   uv run python -m src.pipeline.construir_bd
+data/raw/
+data/processed/
+# Exportación del chat del equipo: contiene nombres y datos personales.
+chat-wsp/

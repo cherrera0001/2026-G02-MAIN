@@ -1,0 +1,15 @@
+[project]
+name = "brujula-ia-regional"
+version = "0.1.0"
+description = "Priorización territorial del cofinanciamiento de memorias y tesis aplicadas con IA"
+requires-python = ">=3.12"
+dependencies = [
+    "duckdb>=1.1",
+    "dbfread>=2.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 140
