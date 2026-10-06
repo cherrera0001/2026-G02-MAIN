@@ -117,7 +117,7 @@ CREATE TABLE core.programa (
     cod_programa      VARCHAR PRIMARY KEY,       -- cod_sies_obt_tit
     cod_inst          INTEGER NOT NULL,
     cod_sede          INTEGER NOT NULL,
-    cod_carrera       INTEGER NOT NULL,
+    cod_carrera       INTEGER,                   -- nulo en parte de los programas de la fuente (sin dato; no se imputa)
     nombre_carrera    VARCHAR NOT NULL,
     id_nivel          INTEGER NOT NULL REFERENCES core.nivel_carrera (id_nivel),
     id_area_generica  INTEGER NOT NULL REFERENCES core.area_generica (id_area_generica),
