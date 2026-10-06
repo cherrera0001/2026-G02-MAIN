@@ -99,3 +99,5 @@ data/raw/
 data/processed/
 # Exportación del chat del equipo: contiene nombres y datos personales.
 chat-wsp/
+# Configuración personal de Claude Code (permisos locales de cada integrante).
+.claude/settings.local.json
