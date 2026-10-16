@@ -55,11 +55,11 @@ Estas decisiones son del equipo. Si una tarea depende de una, detente, propone u
 4. Fuentes de demanda, productividad y exposición a IA. Ninguna está validada.
 5. Usuario principal.
 
-También siguen abiertas: tratamiento de la modalidad no presencial, umbral de supresión de celdas pequeñas, tecnología de la interfaz y si los comprimidos de datos deben seguir versionados. El detalle está en `docs/COHERENCIA_HISTORIAS.md`, sección 6. Cada decisión tiene un issue con etiqueta `decisión` (D1 a D8, enlazados en `docs/BACKLOG.md`): ahí se anota la opción elegida, la fecha y el motivo; después se actualizan README y este archivo, y solo entonces el código.
+También siguen abiertas: tratamiento de la modalidad no presencial, umbral de supresión de celdas pequeñas, si los comprimidos de datos deben seguir versionados. El detalle está en `docs/COHERENCIA_HISTORIAS.md`, sección 6. Cada decisión tiene un issue con etiqueta `decisión` (D1 a D8, enlazados en `docs/BACKLOG.md`): ahí se anota la opción elegida, la fecha y el motivo; después se actualizan README y este archivo, y solo entonces el código.
 
 ## Backlog en GitHub
 
-- Project «Brújula IA Regional — Backlog»: https://github.com/users/cherrera0001/projects/6 (número 6, propietario `cherrera0001`, vinculado al repositorio). `Status` conserva las opciones por defecto de GitHub: `Backlog`, `Ready`, `In progress`, `In review`, `Done`. Campos propios: `Peso` (número 0–5), `Tipo` (Historia / Tarea / Decisión / Investigación), `Modelo Claude` (Opus / Sonnet / Haiku), `Sprint` (Pendiente / Sprint 1 / Sprint 2), `Horas estimadas` y `Esfuerzo real` (números). `Priority`, `Size`, `Estimate`, `Start date` y `Target date` vienen de la plantilla de GitHub y no se usan.
+- Project «Brújula IA Regional — Backlog»: https://github.com/users/cherrera0001/projects/6 (número 6, propietario `cherrera0001`, vinculado al repositorio). `Status`: `Backlog`, `Ready`, `In Progress`, `In Review`, `Blocked`, `Done`. Campos propios: `Peso` (número 0–5), `Tipo` (Historia / Tarea / Decisión / Investigación), `Modelo Claude` (Opus / Sonnet / Haiku), `Sprint` (Pendiente / Sprint 1 / Sprint 2), `Horas estimadas` y `Esfuerzo real` (números). `Priority` (P0–P3) y `Size` (XS–L; XL histórico preservado) se usan para SDD desde 2026-10-16. `Estimate`, `Start date` y `Target date` se conservan sin compromiso nuevo.
 - Etiquetas: `user story`, `tarea`, `decisión`, `investigación`, `propuesta` (lo que el repositorio no acredita como aprobado por el equipo).
 - `docs/BACKLOG.md` es el índice: historia, peso global, tareas, pesos, modelo y enlaces. Se actualiza cada vez que cambia el backlog.
 
@@ -117,7 +117,7 @@ Asignación vigente al 5 de octubre de 2026 (47 issues). El peso es el de la esc
 | #27 | T-P-HU02-5 | Investigación | 2 | Sonnet | Análisis documental con búsqueda web (`analista-fuentes`) |
 | #28 | T-P-HU02-6 | Investigación | 2 | Sonnet | Síntesis con criterio; Haiku puede preparar el borrador de la tabla y Sonnet revisarlo |
 | #29 | T-P-HU03-1 | Investigación | 2 | Sonnet | Lectura técnica de metodologías y redacción de fichas con búsqueda web |
-| #30 | T-P-HU03-2 | Tarea | 2 | Sonnet | Cambio de pipeline con patrón existente (`FUENTES`, `gob.carga`) |
+| #30 | T-P-HU03-2 | Tarea | 2 | Sonnet | Cambio de pipeline con patrón existente (`Fuentes`, `gob.carga`) |
 | #31 | T-P-HU03-3 | Tarea | 1 | Sonnet | Redacción metodológica estándar |
 | #32 | T-P-HU03-4 | Tarea | 3 | Sonnet | Clasificación razonada con justificaciones; el modelo propone, el equipo revisa |
 | #33 | T-P-HU03-5 | Tarea | 3 | Sonnet | Método de similitud conocido; si la elección de técnica resulta ambigua, consultar con Opus antes de implementar |
@@ -154,3 +154,6 @@ Este archivo orienta el trabajo: no reemplaza las historias aprobadas por el equ
 - `git status` no muestra datos, secretos ni archivos ignorados entre lo que se va a versionar.
 - Lo que es propuesta o está pendiente queda rotulado como tal.
 - Los cambios quedan locales para revisión: no hagas commit, push, merge ni comandos destructivos (`git reset --hard`, `git clean`, `git checkout --`) sin pedido explícito. Issues y Project se crean o editan solo con pedido explícito y siguiendo «Backlog en GitHub»; ramas remotas, milestones y asignaciones, nunca sin pedido.
+
+## Decisiones tecnológicas aprobadas — 2026-10-16
+GitHub Projects es el seguimiento oficial y Streamlit la interfaz del MVP; ver [ADR-001](docs/adr/ADR-001-github-projects.md) y [ADR-002](docs/adr/ADR-002-streamlit.md). Esto sustituye las referencias históricas a selección pendiente de interfaz (D7/#17) y a Priority/Size sin uso. No cierra automáticamente #17. Requisitos: `spec.md`; descomposición: `tasks.md`; estado operacional: Issues/Project 6. Plan, contratos, pruebas previstas y matriz tarea↔issue: [SDD-006](specs/006-visualizacion-reportes/plan.md). Las demás decisiones de producto y privacidad permanecen pendientes.

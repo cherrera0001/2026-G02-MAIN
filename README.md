@@ -130,7 +130,7 @@ Dentro de la sesión, `/agents` muestra los agentes disponibles.
 | `cientifico-datos` | Indicadores, vínculos área–sector, ranking y sensibilidad | No mezcla observado, inferido y propuesto; no elige unidad ni pesos por el equipo |
 | `revisor-qa` | Antes de versionar: reproducibilidad, lint, documentación y seguridad del diff | No corrige código ajeno ni cambia decisiones del Product Owner |
 
-No hay agente de interfaz: el repositorio no tiene aplicación y la tecnología de la interfaz es una decisión abierta.
+No hay agente de interfaz: el repositorio aún no tiene aplicación; Streamlit es la interfaz aprobada (ADR-002).
 
 Formas de delegar:
 
@@ -367,7 +367,7 @@ Campos creados con `gh project field-create` (comprobados con `gh project field-
 | `Horas estimadas` | Número | Estimación de tiempo, independiente del peso; vacío si no hay fundamento |
 | `Esfuerzo real` | Número | Horas reales, registradas al cerrar la tarea |
 
-`Priority`, `Size`, `Estimate`, `Start date` y `Target date` vienen de la plantilla de GitHub y no se usan. La CLI no crea campos de tipo iteración; si el equipo prefiere `Sprint` como iteración con fechas, se cambia desde la web. Las fechas de cada sprint se toman del programa del curso; este repositorio no las confirma.
+`Priority` (P0–P3) y `Size` (XS–L; XL histórico preservado) se usan para SDD desde 2026-10-16. `Estimate`, `Start date` y `Target date` se conservan sin compromiso nuevo. La CLI no crea campos de tipo iteración; si el equipo prefiere `Sprint` como iteración con fechas, se cambia desde la web. Las fechas de cada sprint se toman del programa del curso; este repositorio no las confirma.
 
 ### Escala de peso y esfuerzo
 
@@ -590,3 +590,6 @@ Cambios versionados en la rama `docs/backlog-github`, pendientes de revisión y 
 - No se crearon milestones, ramas remotas ni asignaciones: los sprints y los roles no están confirmados en el repositorio.
 - La disponibilidad de un modelo Haiku en esta instalación no se comprobó (`/model` en sesión); si no está, se usa Sonnet.
 - Las licencias y las URL de las fuentes no se volvieron a comprobar.
+
+## Decisiones tecnológicas aprobadas — 2026-10-16
+GitHub Projects es el seguimiento oficial y Streamlit la interfaz del MVP; ver [ADR-001](docs/adr/ADR-001-github-projects.md) y [ADR-002](docs/adr/ADR-002-streamlit.md). Esto sustituye las referencias históricas a selección pendiente de interfaz (D7/#17) y a Priority/Size sin uso. No cierra automáticamente #17. Requisitos: `spec.md`; descomposición: `tasks.md`; estado operacional: Issues/Project 6. Plan, contratos, pruebas previstas y matriz tarea↔issue: [SDD-006](specs/006-visualizacion-reportes/plan.md). Las demás decisiones de producto y privacidad permanecen pendientes.
