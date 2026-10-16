@@ -1,0 +1,244 @@
+// Modelo Relacional — Brújula IA Regional (DuckDB)
+// Archivo de especificación DBML (Database Markup Language)
+// Generado por SDD / Spec Kit
+
+Table gob_fuente {
+  id_fuente varchar [pk]
+  nombre varchar [not null]
+  organismo varchar [not null]
+  url varchar [not null]
+  licencia varchar
+  unidad_territorial varchar
+  contiene_datos_personales boolean [not null]
+  notas varchar
+}
+
+Table gob_carga {
+  id_carga integer [pk]
+  id_fuente varchar [not null, ref: > gob_fuente.id_fuente]
+  archivo varchar [not null]
+  sha256 varchar [not null]
+  periodo integer
+  filas_leidas bigint [not null]
+  fecha_carga timestamp [not null]
+}
+
+Table gob_control_calidad {
+  regla varchar [pk]
+  descripcion varchar [not null]
+  valor double
+  umbral varchar
+  cumple boolean [not null]
+  detalle varchar
+}
+
+Table core_region {
+  cod_region integer [pk, note: 'Código oficial 1 a 16']
+  nombre varchar [not null, unique]
+  nombre_mineduc varchar [not null, unique]
+}
+
+Table core_comuna {
+  id_comuna integer [pk]
+  cod_cut integer [unique, note: 'Código Único Territorial; nulo si no está en capa geo']
+  nombre varchar [not null]
+  nombre_norm varchar [not null, unique, note: 'Llave de cruce mayúsculas sin tilde']
+  provincia varchar
+  cod_region integer [not null, ref: > core_region.cod_region]
+}
+
+Table core_institucion {
+  cod_inst integer [pk, note: 'Código SIES']
+  nombre varchar [not null]
+  tipo_inst_1 varchar
+  tipo_inst_2 varchar
+  tipo_inst_3 varchar
+}
+
+Table core_sede {
+  cod_inst integer [not null, ref: > core_institucion.cod_inst]
+  cod_sede integer [not null]
+  nombre varchar [not null]
+  id_comuna integer [not null, ref: > core_comuna.id_comuna]
+
+  indexes {
+    (cod_inst, cod_sede) [pk]
+  }
+}
+
+Table core_inmueble {
+  id_inmueble integer [pk]
+  cod_inst integer [not null, ref: > core_institucion.cod_inst]
+  nombre varchar
+  id_comuna integer [not null, ref: > core_comuna.id_comuna]
+  direccion varchar
+  latitud double [not null]
+  longitud double [not null]
+  anio integer
+}
+
+Table core_nivel_carrera {
+  id_nivel integer [pk]
+  nombre varchar [not null, unique]
+  grupo varchar
+  nivel_global varchar [not null]
+  elegible_tesis varchar [not null, note: 'si, no, pendiente']
+}
+
+Table core_area_generica {
+  id_area_generica integer [pk]
+  nombre varchar [not null, unique, note: '285 áreas comparables']
+}
+
+Table core_programa {
+  cod_programa varchar [pk, note: 'cod_sies_obt_tit']
+  cod_inst integer [not null]
+  cod_sede integer [not null]
+  cod_carrera integer [note: 'admite nulos en fuente completa']
+  nombre_carrera varchar [not null]
+  id_nivel integer [not null, ref: > core_nivel_carrera.id_nivel]
+  id_area_generica integer [not null, ref: > core_area_generica.id_area_generica]
+  area_conocimiento varchar
+  cine_f_13_area varchar
+  cine_f_13_subarea varchar
+  jornada varchar
+  modalidad varchar [note: 'Presencial, Semipresencial, No Presencial']
+  tipo_plan varchar
+  duracion_sem integer
+}
+
+Ref: core_programa.(cod_inst, cod_sede) > core_sede.(cod_inst, cod_sede)
+
+Table core_titulacion {
+  periodo integer [not null]
+  cod_programa varchar [not null, ref: > core_programa.cod_programa]
+  genero integer [not null, note: 'gen_alu Mineduc 1 o 2']
+  n_titulos integer [not null]
+  id_carga integer [not null, note: 'referencia lógica -> gob_carga.id_carga']
+
+  indexes {
+    (periodo, cod_programa, genero) [pk]
+  }
+}
+
+Table core_sector {
+  id_sector integer [pk]
+  codigo varchar [not null]
+  nombre varchar [not null]
+  clasificacion varchar [not null, note: 'CIIU4.CL']
+
+  indexes {
+    (clasificacion, codigo) [unique]
+  }
+}
+
+Table core_indicador {
+  id_indicador varchar [pk]
+  nombre varchar [not null]
+  definicion varchar [not null]
+  unidad varchar
+  id_fuente varchar [not null, note: 'referencia lógica -> gob_fuente.id_fuente']
+  tipo_evidencia varchar [not null, note: 'observado, inferido, propuesto']
+}
+
+Table core_indicador_region_sector {
+  id_indicador varchar [not null, ref: > core_indicador.id_indicador]
+  cod_region integer [not null, ref: > core_region.cod_region]
+  id_sector integer [not null, ref: > core_sector.id_sector]
+  periodo integer [not null]
+  valor double
+  id_carga integer [not null, note: 'referencia lógica -> gob_carga.id_carga']
+
+  indexes {
+    (id_indicador, cod_region, id_sector, periodo) [pk]
+  }
+}
+
+Table core_indicador_area {
+  id_indicador varchar [not null, ref: > core_indicador.id_indicador]
+  id_area_generica integer [not null, ref: > core_area_generica.id_area_generica]
+  valor double
+  id_carga integer [not null, note: 'referencia lógica -> gob_carga.id_carga']
+
+  indexes {
+    (id_indicador, id_area_generica) [pk]
+  }
+}
+
+Table core_vinculo_area_sector {
+  id_area_generica integer [not null, ref: > core_area_generica.id_area_generica]
+  id_sector integer [not null, ref: > core_sector.id_sector]
+  puntaje double [not null, note: '0 a 1']
+  metodo varchar [not null, note: 'manual, semantico']
+  estado varchar [not null, note: 'sugerido, revisado, rechazado']
+  justificacion varchar
+
+  indexes {
+    (id_area_generica, id_sector) [pk]
+  }
+}
+
+Table core_criterio {
+  id_criterio varchar [pk]
+  nombre varchar [not null]
+  descripcion varchar [not null]
+  sentido varchar [not null, note: 'mayor_es_mejor, menor_es_mejor']
+}
+
+Table core_escenario {
+  id_escenario integer [pk]
+  nombre varchar [not null, unique]
+  descripcion varchar
+  es_base boolean [not null, default: false]
+}
+
+Table core_peso {
+  id_escenario integer [not null, ref: > core_escenario.id_escenario]
+  id_criterio varchar [not null, ref: > core_criterio.id_criterio]
+  peso double [not null, note: '0 a 1, suma 1']
+
+  indexes {
+    (id_escenario, id_criterio) [pk]
+  }
+}
+
+// ----------------------------------------------------------------------------
+// Tablas propuestas para persistencia reproducible del ranking (Fase 4 / Fase 5)
+// ----------------------------------------------------------------------------
+
+Table core_ejecucion_ranking {
+  id_ejecucion integer [pk]
+  id_escenario integer [not null, ref: > core_escenario.id_escenario]
+  fecha_ejecucion timestamp [not null]
+  commit_hash varchar [not null]
+  algoritmo_version varchar [not null]
+  parametros_json varchar
+}
+
+Table core_resultado_ranking {
+  id_resultado integer [pk]
+  id_ejecucion integer [not null, ref: > core_ejecucion_ranking.id_ejecucion]
+  cod_region integer [not null, ref: > core_region.cod_region]
+  id_area_generica integer [not null, ref: > core_area_generica.id_area_generica]
+  cod_inst integer [not null, ref: > core_institucion.cod_inst]
+  posicion integer [not null]
+  puntaje_final double [not null]
+  clasificacion_estabilidad varchar [note: 'robusta, sensible']
+
+  indexes {
+    (id_ejecucion, cod_region, id_area_generica, cod_inst) [unique]
+  }
+}
+
+Table core_aporte_criterio {
+  id_resultado integer [not null, ref: > core_resultado_ranking.id_resultado]
+  id_criterio varchar [not null, ref: > core_criterio.id_criterio]
+  valor_original double
+  valor_normalizado double [not null]
+  peso_aplicado double [not null]
+  aporte_final double [not null]
+
+  indexes {
+    (id_resultado, id_criterio) [pk]
+  }
+}
