@@ -96,7 +96,8 @@ env/
 # Datos extraídos y base generada: se reconstruyen con
 #   uv run python -m src.pipeline.construir_bd
 data/raw/
-data/processed/
+data/processed/*
+!data/processed/brujula.duckdb
 # Exportación del chat del equipo: contiene nombres y datos personales.
 chat-wsp/
 # Configuración personal de Claude Code (permisos locales de cada integrante).
