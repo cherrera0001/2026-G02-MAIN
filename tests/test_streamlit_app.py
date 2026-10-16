@@ -20,6 +20,14 @@ from streamlit.testing.v1 import AppTest
 RUTA_APP = Path(__file__).resolve().parents[1] / "src" / "app" / "streamlit_app.py"
 
 
+def test_inicio_punto_entrada_cloud():
+    """El punto de entrada de Cloud importa y ejecuta la app completa."""
+    entrada = Path(__file__).resolve().parents[1] / "app.py"
+    app = AppTest.from_file(str(entrada), default_timeout=20).run()
+    assert not app.exception, f"Falló el punto de entrada de Cloud: {app.exception}"
+    assert len(app.tabs) == 6
+
+
 @pytest.fixture(scope="module")
 def app_instance():
     """Instancia compartida inicializada de la aplicación con timeout suficiente."""
