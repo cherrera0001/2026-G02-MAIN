@@ -9,7 +9,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-# Inyección dinámica de la raíz del repositorio en sys.path para Streamlit Cloud
+# Ruta canónica única, válida al ejecutar app.py o esta entrada directamente.
 RAIZ_REPOSITORIO = Path(__file__).resolve().parents[2]
 if str(RAIZ_REPOSITORIO) not in sys.path:
     sys.path.insert(0, str(RAIZ_REPOSITORIO))
@@ -18,20 +18,9 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
-from src.servicios.consultas_oferta import (
-    filtrar_oferta,
-    obtener_controles_calidad,
-    obtener_distribucion_niveles,
-    obtener_distribucion_regional,
-    obtener_distribucion_tipos_inst,
-    obtener_especializacion,
-    obtener_estado_priorizacion,
-    obtener_opciones_filtros,
-    obtener_resumen_general,
-    obtener_sedes_geo,
-    obtener_top_areas,
-    obtener_trazabilidad_fuentes,
-)
+from src.servicios.carga import cargar_consultas
+
+consultas = cargar_consultas()
 
 # -----------------------------------------------------------------------------
 # Configuración general de la página
@@ -49,42 +38,42 @@ st.set_page_config(
 # -----------------------------------------------------------------------------
 @st.cache_data(ttl=3600)
 def cargar_resumen():
-    return obtener_resumen_general()
+    return consultas.obtener_resumen_general()
 
 
 @st.cache_data(ttl=3600)
 def cargar_filtros():
-    return obtener_opciones_filtros()
+    return consultas.obtener_opciones_filtros()
 
 
 @st.cache_data(ttl=3600)
 def cargar_trazabilidad():
-    return obtener_trazabilidad_fuentes()
+    return consultas.obtener_trazabilidad_fuentes()
 
 
 @st.cache_data(ttl=3600)
 def cargar_controles():
-    return obtener_controles_calidad()
+    return consultas.obtener_controles_calidad()
 
 
 @st.cache_data(ttl=3600)
 def cargar_distribucion_regional():
-    return obtener_distribucion_regional()
+    return consultas.obtener_distribucion_regional()
 
 
 @st.cache_data(ttl=3600)
 def cargar_distribucion_niveles():
-    return obtener_distribucion_niveles()
+    return consultas.obtener_distribucion_niveles()
 
 
 @st.cache_data(ttl=3600)
 def cargar_distribucion_tipos_inst():
-    return obtener_distribucion_tipos_inst()
+    return consultas.obtener_distribucion_tipos_inst()
 
 
 @st.cache_data(ttl=3600)
 def cargar_estado_priorizacion():
-    return obtener_estado_priorizacion()
+    return consultas.obtener_estado_priorizacion()
 
 
 # -----------------------------------------------------------------------------
@@ -312,7 +301,7 @@ def main():
         )
 
         # Consulta con los filtros de la barra lateral
-        df_filtrada = filtrar_oferta(
+        df_filtrada = consultas.filtrar_oferta(
             cod_region=cod_reg,
             id_comuna=id_comuna,
             cod_inst=cod_i,
@@ -339,7 +328,7 @@ def main():
             "vinculados al volumen de graduados de la institución en la comuna."
         )
 
-        datos_geo = obtener_sedes_geo(cod_region=cod_reg, id_comuna=id_comuna, cod_inst=cod_i)
+        datos_geo = consultas.obtener_sedes_geo(cod_region=cod_reg, id_comuna=id_comuna, cod_inst=cod_i)
         df_geo = datos_geo["df_puntos"].copy()
 
         m1, m2, m3 = st.columns(3)
@@ -423,7 +412,7 @@ def main():
 
         # Top 10 áreas con mayor masa crítica en el territorio seleccionado
         st.markdown("#### Top 10 Áreas Genéricas de Formación con Mayor Masa Crítica")
-        df_top_areas = obtener_top_areas(cod_region=cod_reg, limit=10)
+        df_top_areas = consultas.obtener_top_areas(cod_region=cod_reg, limit=10)
 
         chart_top_areas = (
             alt.Chart(df_top_areas)
@@ -468,7 +457,7 @@ def main():
                 help="Las celdas con recuentos inferiores a este umbral son marcadas como inestables debido a que denominadores pequeños inflan artificialmente el LQ.",
             )
 
-        datos_lq = obtener_especializacion(
+        datos_lq = consultas.obtener_especializacion(
             cod_region=cod_reg,
             id_area_generica=id_a,
             umbral_celda_pequena=umbral_celda,
