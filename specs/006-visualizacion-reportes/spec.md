@@ -1,8 +1,8 @@
 # Feature Specification: 006-visualizacion-reportes
 
-**Feature Branch**: `sdd/006-visualizacion-reportes`  
+**Feature Branch**: `feat/auditoria-ux-ciencia-datos`  
 **Created**: 2026-10-16  
-**Status**: En Propuesta / Capa de Datos Parcialmente Disponible  
+**Status**: Incremento Funcional Implementado y Auditado (6 vistas analíticas, LQ transparente con umbral tau, bloqueo estricto de priorización)  
 **Input**: Requisitos de interfaz analítica territorial (mapas, tablas, filtros) y generador de reportes ejecutivos reproducibles para autoridades ministeriales. Issues relacionados: #10, #15, #17, #44, #45, #46, #47.
 
 ## User Scenarios & Testing *(mandatory)*

@@ -281,3 +281,74 @@ def test_trazabilidad_fuentes():
     assert "sha256" in df_traz.columns
     assert df_traz["sha256"].notna().all()
     assert (df_traz["sha256"].str.len() == 64).all()
+
+
+# -----------------------------------------------------------------------------
+# Nuevos Servicios Analíticos (Panorama Nacional, Niveles, Áreas, Priorización)
+# -----------------------------------------------------------------------------
+def test_distribucion_regional():
+    """Verifica la distribución regional agregada, consistencia censal e infraestructura."""
+    from src.servicios.consultas_oferta import obtener_distribucion_regional
+
+    df_reg = obtener_distribucion_regional()
+    assert len(df_reg) == 16, "Deben estar presentes las 16 regiones de Chile"
+    assert df_reg["n_titulos"].sum() == 328998, "La suma de titulados regionales debe ser 328.998"
+    assert df_reg["n_inmuebles"].sum() == 1297, "La suma de inmuebles debe ser 1.297"
+    assert abs(df_reg["pct_nacional"].sum() - 100.0) < 0.2
+
+
+def test_distribucion_niveles():
+    """Verifica la descomposición por nivel de carrera y elegibilidad de proyectos de tesis."""
+    from src.servicios.consultas_oferta import obtener_distribucion_niveles
+
+    df_niv = obtener_distribucion_niveles()
+    assert len(df_niv) == 9, "Deben estar catalogados los 9 niveles formativos de Mineduc"
+    assert df_niv["n_titulos"].sum() == 328998
+    assert set(df_niv["elegible_tesis"].unique()) == {"si", "no", "pendiente"}
+
+
+def test_distribucion_tipos_inst():
+    """Verifica la distribución según tipo de IES (Universidades, IP, CFT)."""
+    from src.servicios.consultas_oferta import obtener_distribucion_tipos_inst
+
+    df_tipos = obtener_distribucion_tipos_inst()
+    assert len(df_tipos) == 3
+    assert df_tipos["n_titulos"].sum() == 328998
+    assert set(df_tipos["tipo_inst_1"].str.lower().str.slice(0, 4)) == {"univ", "inst", "cent"}
+
+
+def test_top_areas():
+    """Verifica la consulta de top áreas genéricas con mayor masa crítica."""
+    from src.servicios.consultas_oferta import obtener_top_areas
+
+    df_top = obtener_top_areas(limit=10)
+    assert len(df_top) == 10
+    assert (df_top["n_titulos"] > 0).all()
+    # Verificación con filtro de región
+    df_top_rm = obtener_top_areas(cod_region=13, limit=5)
+    assert len(df_top_rm) == 5
+    assert df_top_rm["n_titulos"].sum() < 328998
+
+
+def test_descomposicion_matematica_lq():
+    """Verifica que el cálculo de LQ exponga rigurosamente sus variables subyacentes."""
+    lq_res = obtener_especializacion(umbral_celda_pequena=5)
+    df_lq = lq_res["df_especializacion"]
+
+    columnas_esperadas = ["t_ra", "t_r", "t_a", "t_total", "pct_region", "pct_nacional", "cociente_especializacion"]
+    for col in columnas_esperadas:
+        assert col in df_lq.columns, f"Columna matemática '{col}' ausente en la descomposición de LQ"
+
+    assert (df_lq["t_total"] == 328998).all(), "El total nacional de referencia debe ser exactamente 328.998"
+
+
+def test_estado_priorizacion():
+    """Verifica la gobernanza y justificación del bloqueo metodológico del ranking."""
+    from src.servicios.consultas_oferta import obtener_estado_priorizacion
+
+    estado = obtener_estado_priorizacion()
+    assert estado["estado"] == "BLOQUEADO"
+    assert estado["filas_demanda"] == 0
+    assert estado["filas_vinculo"] == 0
+    assert len(estado["decisiones_pendientes"]) >= 4
+
