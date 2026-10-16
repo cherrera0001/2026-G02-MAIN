@@ -252,9 +252,29 @@ def obtener_especializacion(
             params.append(id_area_generica)
 
         sql = f"""
+            WITH ra AS (
+                SELECT periodo, cod_region, region, id_area_generica, area_generica, SUM(n_titulos) AS n_titulos
+                FROM mart.oferta
+                GROUP BY ALL
+            ),
+            calc AS (
+                SELECT cod_region, region, id_area_generica, area_generica,
+                       n_titulos,
+                       n_titulos AS t_ra,
+                       SUM(n_titulos) OVER (PARTITION BY periodo, cod_region) AS t_r,
+                       SUM(n_titulos) OVER (PARTITION BY periodo, id_area_generica) AS t_a,
+                       SUM(n_titulos) OVER (PARTITION BY periodo) AS t_total,
+                       round(n_titulos * 100.0 / SUM(n_titulos) OVER (PARTITION BY periodo, cod_region), 3) AS pct_region,
+                       round(SUM(n_titulos) OVER (PARTITION BY periodo, id_area_generica) * 100.0 / SUM(n_titulos) OVER (PARTITION BY periodo), 3) AS pct_nacional,
+                       (n_titulos / SUM(n_titulos) OVER (PARTITION BY periodo, cod_region))
+                         / (SUM(n_titulos) OVER (PARTITION BY periodo, id_area_generica) / SUM(n_titulos) OVER (PARTITION BY periodo))
+                         AS cociente_especializacion
+                FROM ra
+            )
             SELECT cod_region, region, id_area_generica, area_generica,
-                   n_titulos, cociente_especializacion
-            FROM mart.especializacion
+                   n_titulos, t_ra, t_r, t_a, t_total, pct_region, pct_nacional,
+                   round(cociente_especializacion, 2) AS cociente_especializacion
+            FROM calc
             WHERE {' AND '.join(where_clauses)}
             ORDER BY cociente_especializacion DESC
         """
@@ -266,12 +286,14 @@ def obtener_especializacion(
         stats = con.execute(
             """
             SELECT count(*) AS total_celdas,
-                   min(cociente_especializacion) AS min_lq,
-                   quantile_cont(cociente_especializacion, 0.5) AS med_lq,
-                   max(cociente_especializacion) AS max_lq
+                    min(cociente_especializacion) AS min_lq,
+                    quantile_cont(cociente_especializacion, 0.5) AS med_lq,
+                    max(cociente_especializacion) AS max_lq
             FROM mart.especializacion
             """
         ).fetchone()
+
+        celdas_pequenas_total = int(df["es_celda_pequena"].sum()) if not df.empty else 0
 
         return {
             "df_especializacion": df,
@@ -280,6 +302,7 @@ def obtener_especializacion(
             "mediana_lq": stats[2],
             "max_lq": stats[3],
             "umbral_aplicado": umbral_celda_pequena,
+            "celdas_pequenas_count": celdas_pequenas_total,
         }
     finally:
         con.close()
@@ -314,3 +337,137 @@ def obtener_controles_calidad(db_path: Path | str | None = None) -> pd.DataFrame
         return con.execute(sql).df()
     finally:
         con.close()
+
+
+def obtener_distribucion_regional(db_path: Path | str | None = None) -> pd.DataFrame:
+    """Retorna la distribución nacional por región con recuentos e infraestructura."""
+    con = conectar(db_path)
+    try:
+        sql = """
+            WITH inm AS (
+                SELECT cod_region, count(*) AS n_inmuebles
+                FROM core.inmueble
+                JOIN core.comuna USING (id_comuna)
+                GROUP BY cod_region
+            ),
+            reg AS (
+                SELECT r.cod_region, r.nombre AS region,
+                       sum(t.n_titulos) AS n_titulos,
+                       round(sum(t.n_titulos) * 100.0 / (SELECT sum(n_titulos) FROM mart.oferta), 2) AS pct_nacional,
+                       count(DISTINCT p.cod_inst) AS n_instituciones,
+                       count(DISTINCT p.cod_programa) AS n_programas
+                FROM core.titulacion t
+                JOIN core.programa p USING (cod_programa)
+                JOIN core.sede s USING (cod_inst, cod_sede)
+                JOIN core.comuna c USING (id_comuna)
+                JOIN core.region r USING (cod_region)
+                GROUP BY r.cod_region, r.nombre
+            )
+            SELECT reg.cod_region, reg.region, reg.n_titulos, reg.pct_nacional,
+                   reg.n_instituciones, reg.n_programas,
+                   coalesce(inm.n_inmuebles, 0) AS n_inmuebles
+            FROM reg
+            LEFT JOIN inm USING (cod_region)
+            ORDER BY reg.n_titulos DESC
+        """
+        return con.execute(sql).df()
+    finally:
+        con.close()
+
+
+def obtener_distribucion_niveles(db_path: Path | str | None = None) -> pd.DataFrame:
+    """Retorna la desagregación de oferta por nivel formativo y estado de elegibilidad de tesis."""
+    con = conectar(db_path)
+    try:
+        sql = """
+            SELECT n.id_nivel, n.nombre AS nivel, n.elegible_tesis,
+                   sum(t.n_titulos) AS n_titulos,
+                   round(sum(t.n_titulos) * 100.0 / (SELECT sum(n_titulos) FROM mart.oferta), 2) AS pct_nacional,
+                   count(DISTINCT t.cod_programa) AS n_programas
+            FROM core.titulacion t
+            JOIN core.programa p USING (cod_programa)
+            JOIN core.nivel_carrera n USING (id_nivel)
+            GROUP BY n.id_nivel, n.nombre, n.elegible_tesis
+            ORDER BY n_titulos DESC
+        """
+        return con.execute(sql).df()
+    finally:
+        con.close()
+
+
+def obtener_distribucion_tipos_inst(db_path: Path | str | None = None) -> pd.DataFrame:
+    """Retorna la distribución de oferta según tipo de institución (Universidad, IP, CFT)."""
+    con = conectar(db_path)
+    try:
+        sql = """
+            SELECT i.tipo_inst_1,
+                   sum(t.n_titulos) AS n_titulos,
+                   round(sum(t.n_titulos) * 100.0 / (SELECT sum(n_titulos) FROM mart.oferta), 2) AS pct_nacional,
+                   count(DISTINCT i.cod_inst) AS n_instituciones
+            FROM core.titulacion t
+            JOIN core.programa p USING (cod_programa)
+            JOIN core.institucion i USING (cod_inst)
+            GROUP BY i.tipo_inst_1
+            ORDER BY n_titulos DESC
+        """
+        return con.execute(sql).df()
+    finally:
+        con.close()
+
+
+def obtener_top_areas(
+    db_path: Path | str | None = None,
+    cod_region: int | None = None,
+    limit: int = 10,
+) -> pd.DataFrame:
+    """Retorna las áreas genéricas de formación con mayor volumen de titulados."""
+    con = conectar(db_path)
+    try:
+        where_clause = "WHERE r.cod_region = ?" if cod_region is not None else ""
+        params = [cod_region] if cod_region is not None else []
+
+        sql = f"""
+            SELECT a.id_area_generica, a.nombre AS area_generica,
+                   sum(t.n_titulos) AS n_titulos,
+                   round(sum(t.n_titulos) * 100.0 / (
+                       SELECT sum(n_titulos) FROM mart.oferta {'WHERE cod_region = ?' if cod_region is not None else ''}
+                   ), 2) AS pct
+            FROM core.titulacion t
+            JOIN core.programa p USING (cod_programa)
+            JOIN core.sede s USING (cod_inst, cod_sede)
+            JOIN core.comuna c USING (id_comuna)
+            JOIN core.region r USING (cod_region)
+            JOIN core.area_generica a USING (id_area_generica)
+            {where_clause}
+            GROUP BY a.id_area_generica, a.nombre
+            ORDER BY n_titulos DESC
+            LIMIT {limit}
+        """
+        # Si se filtró por región, el subselect también lleva el parámetro
+        all_params = params * 2 if cod_region is not None else params
+        return con.execute(sql, all_params).df()
+    finally:
+        con.close()
+
+
+def obtener_estado_priorizacion(db_path: Path | str | None = None) -> dict[str, Any]:
+    """Retorna el estado de gobernanza y bloqueo metodológico del ranking multicriterio."""
+    con = conectar(db_path)
+    try:
+        n_demanda = con.execute("SELECT count(*) FROM core.indicador_region_sector").fetchone()[0]
+        n_vinculo = con.execute("SELECT count(*) FROM core.vinculo_area_sector").fetchone()[0]
+        n_criterios = con.execute("SELECT count(*) FROM core.criterio").fetchone()[0]
+        n_escenarios = con.execute("SELECT count(*) FROM core.escenario").fetchone()[0]
+
+        return {
+            "estado": "BLOQUEADO",
+            "motivo": "Ausencia de fuentes de demanda laboral externa validadas e índices IA sin consenso ministerial",
+            "filas_demanda": n_demanda,
+            "filas_vinculo": n_vinculo,
+            "criterios_definidos": n_criterios,
+            "escenarios_definidos": n_escenarios,
+            "decisiones_pendientes": ["D1 (Ponderación)", "D3 (Elegibilidad técnicos)", "D4 (Fuentes demanda)", "D6 (Umbrales territoriales)"],
+        }
+    finally:
+        con.close()
+
