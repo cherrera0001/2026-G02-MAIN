@@ -122,3 +122,6 @@ Peso 0: registrar un acuerdo. No son requisitos.
 - 47 issues: 10 historias, 22 tareas, 7 investigaciones, 8 decisiones.
 - Fuera del backlog por decisión de alcance pendiente: R3 (sin tareas). No se crearon tareas de API ni de interfaz: dependen de D7.
 - Tareas de peso 5: ninguna. La historia P-HU03 lleva peso global 5 y está dividida en siete tareas de peso 1 a 3.
+
+## Actualización SDD — 2026-10-16
+Project 6 continúa siendo el tablero oficial. Streamlit queda aprobado (ADR-002), sustituyendo la selección pendiente D7, sin cerrar #17 automáticamente. La matriz canónica de tareas de Streamlit y sus dependencias es [tasks.md](../specs/006-visualizacion-reportes/tasks.md); no se duplica aquí. Los índices y pesos anteriores son históricos; estado, prioridad y tamaño vigentes se consultan en Projects. Se usan Priority (P0–P3), Size (XS–L; XL histórico preservado) y Feature SDD. Assignees y Milestone son campos nativos; no se asignan sin compromiso. Iteración requiere fechas aprobadas antes de configurar su calendario; Sprint histórico se conserva y no equivale a una iteración con fechas.
