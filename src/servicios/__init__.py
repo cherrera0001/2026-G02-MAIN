@@ -1,8 +1,20 @@
 """API pública diferida de los servicios analíticos."""
 
-from .carga import FUNCIONES_PUBLICAS
-
-__all__ = FUNCIONES_PUBLICAS
+__all__ = [
+    "conectar",
+    "filtrar_oferta",
+    "obtener_controles_calidad",
+    "obtener_distribucion_niveles",
+    "obtener_distribucion_regional",
+    "obtener_distribucion_tipos_inst",
+    "obtener_especializacion",
+    "obtener_estado_priorizacion",
+    "obtener_opciones_filtros",
+    "obtener_resumen_general",
+    "obtener_sedes_geo",
+    "obtener_top_areas",
+    "obtener_trazabilidad_fuentes",
+]
 
 
 def __getattr__(nombre: str):
